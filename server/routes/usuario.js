@@ -14,7 +14,7 @@ app.get("/usuario", function(req, res) {
     let limit = req.query.limit || 5;
     limit = Number(limit);
 
-    Usuario.find({})
+    Usuario.find({}, 'nombre email role estado google img')
         .skip(from)
         .limit(limit)
         .exec((err, usuarioDB) => {
@@ -25,12 +25,43 @@ app.get("/usuario", function(req, res) {
                 });
             }
 
-            res.json({
-                ok: true,
-                usuarios: usuarioDB
+            Usuario.count({}, (err, count) => {
+
+                if (err) {
+                    return res.status(400).json({
+                        ok: false,
+                        error: err
+                    });
+                }
+
+                res.json({
+                    ok: true,
+                    usuarios: usuarioDB,
+                    total: count
+                });
             });
         });
 
+});
+
+app.get("/usuario/:id", function(req, res) {
+
+    const id = req.params.id;
+
+    Usuario.findById(id, 'nombre email role estado google img')
+        .exec((err, usuarioDB) => {
+            if (err) {
+                return res.status(400).json({
+                    ok: false,
+                    error: err
+                });
+            }
+
+            res.json({
+                ok: true,
+                usuarios: usuarioDB,
+            });
+        });
 });
 
 app.post("/usuario", function(req, res) {
@@ -39,7 +70,7 @@ app.post("/usuario", function(req, res) {
     if (params.nombre === undefined) {
         res.status(400).json({
             ok: false,
-            message: 'El parametro nombre obligatorio'
+            error: 'El parametro nombre es obligatorio'
         });
     }
 
@@ -91,8 +122,30 @@ app.put("/usuario/:id", function(req, res) {
     });
 });
 
-app.delete("/usuario", function(req, res) {
-    res.json("delete usuario");
+app.delete("/usuario/:id", function(req, res) {
+
+    const id = req.params.id;
+
+    Usuario.findByIdAndRemove(id, (err, usuarioDB) => {
+        if (err) {
+            return res.status(400).json({
+                ok: false,
+                error: err
+            });
+        }
+
+        if (_.isNull(usuarioDB)) {
+            return res.status(400).json({
+                ok: false,
+                error: 'Usuario no encontrado'
+            });
+        }
+
+        res.json({
+            ok: true,
+            usuario: usuarioDB
+        });
+    });
 });
 
 module.exports = app;
