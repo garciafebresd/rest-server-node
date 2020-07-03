@@ -4,8 +4,6 @@ const app = express();
 const bcrypt = require('bcrypt');
 const _ = require('underscore');
 const Usuario = require('../models/usuario');
-const usuario = require("../models/usuario");
-
 
 app.get("/usuario", function(req, res) {
 
@@ -14,7 +12,9 @@ app.get("/usuario", function(req, res) {
     let limit = req.query.limit || 5;
     limit = Number(limit);
 
-    Usuario.find({}, 'nombre email role estado google img')
+    const activeUsers = { estado: true };
+
+    Usuario.find(activeUsers, 'nombre email role estado google img')
         .skip(from)
         .limit(limit)
         .exec((err, usuarioDB) => {
@@ -25,7 +25,7 @@ app.get("/usuario", function(req, res) {
                 });
             }
 
-            Usuario.count({}, (err, count) => {
+            Usuario.count(activeUsers, (err, count) => {
 
                 if (err) {
                     return res.status(400).json({
@@ -123,17 +123,19 @@ app.put("/usuario/:id", function(req, res) {
 });
 
 app.delete("/usuario/:id", function(req, res) {
-
     const id = req.params.id;
 
-    Usuario.findByIdAndRemove(id, (err, usuarioDB) => {
+    const options = { new: true };
+    const updateEstado = { estado: false };
+
+    Usuario.findByIdAndUpdate(id, updateEstado, options, (err, usuarioDB) => {
+
         if (err) {
             return res.status(400).json({
                 ok: false,
                 error: err
             });
         }
-
         if (_.isNull(usuarioDB)) {
             return res.status(400).json({
                 ok: false,
@@ -146,6 +148,26 @@ app.delete("/usuario/:id", function(req, res) {
             usuario: usuarioDB
         });
     });
+
+
+    // Usuario.findByIdAndRemove(id, (err, usuarioDB) => {
+    //     if (err) {
+    //         return res.status(400).json({
+    //             ok: false,
+    //             error: err
+    //         });
+    //     }
+    //     if (_.isNull(usuarioDB)) {
+    //         return res.status(400).json({
+    //             ok: false,
+    //             error: 'Usuario no encontrado'
+    //         });
+    //     }
+    //     res.json({
+    //         ok: true,
+    //         usuario: usuarioDB
+    //     });
+    // });
 });
 
 module.exports = app;
