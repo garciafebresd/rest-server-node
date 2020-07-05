@@ -1,6 +1,13 @@
 // Port
 process.env.PORT = process.env.PORT || 3000;
 
+
+// Vencimiento del token
+process.env.TOKEN_EXPIRED_IN = 60 * 60 * 24 * 30;
+
+// Seet de autenticación
+process.env.SEED = process.env.SEED || 'seed-del-token';
+
 // Entorno
 process.env.NODE_ENV = process.env.NODE_ENV || 'dev';
 
