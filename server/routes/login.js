@@ -7,7 +7,7 @@ const { OAuth2Client } = require('google-auth-library');
 const client = new OAuth2Client(process.env.CLIENT_ID);
 
 const Usuario = require("../models/usuario");
-const { response } = require("./usuario");
+// const { response } = require("./usuario");
 
 const app = express();
 
@@ -73,7 +73,7 @@ app.post("/google", async(req, res) => {
     let token = req.body.idtoken;
 
     let googleUser = await verify(token).catch(err => {
-        return response.status(403).json({
+        return res.status(403).json({
             ok: false,
             err
         });
@@ -87,15 +87,33 @@ app.post("/google", async(req, res) => {
             });
         }
 
-        if (!usuarioDB) {
+        if (usuarioDB) {
+            if (usuarioDB.google === false) {
+                return res.status(400).json({
+                    ok: false,
+                    error: 'Usuario no esta autentucado con google, debe utilizar su autenticacion normal',
+                });
+            } else {
+                let token = jwt.sign({
+                        usuario: usuarioDB,
+                    },
+                    process.env.SEED, { expiresIn: process.env.TOKEN_EXPIRED_IN }
+                );
 
+                return res.json({
+                    ok: true,
+                    usuario: usuarioDB,
+                    token
+                });
+            }
+
+        } else {
             let usuario = new Usuario();
             usuario.nombre = googleUser.nombre;
             usuario.email = googleUser.email;
             usuario.img = googleUser.img;
             usuario.google = true;
             usuario.password = ':)'; // solo para pasar la validacion de la base de datos
-
             usuario.save((err, usuario__) => {
                 if (err) {
                     return res.status(500).json({
@@ -117,25 +135,6 @@ app.post("/google", async(req, res) => {
                 });
             });
         }
-
-        if (usuarioDB.google === false) {
-            return res.status(400).json({
-                ok: false,
-                error: 'Usuario no esta autentucado con google, debe utilizar su autenticacion normal',
-            });
-        }
-
-        let token = jwt.sign({
-                usuario: usuarioDB,
-            },
-            process.env.SEED, { expiresIn: process.env.TOKEN_EXPIRED_IN }
-        );
-
-        return res.json({
-            ok: true,
-            usuario: usuarioDB,
-            token
-        });
 
     });
 
