@@ -1,7 +1,5 @@
 const mongoose = require('mongoose');
-const uniqueValidator = require('mongoose-unique-validator');
-
-let Schema = mongoose.Schema;
+const Schema = mongoose.Schema;
 
 let categoriaSchema = new Schema({
     descripcion: {
@@ -10,9 +8,10 @@ let categoriaSchema = new Schema({
         required: [true, 'La descripcion es obligatorio']
     },
     usuario: {
-        type: String,
-        required: [true, 'El usuario es obligatorio']
+        type: Schema.Types.ObjectId,
+        ref: 'Usuario'
     }
+
 });
 
-module.exports = mongoose.model('categoria', categoriaSchema);
+module.exports = mongoose.model('Categoria', categoriaSchema);

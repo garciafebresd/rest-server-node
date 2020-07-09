@@ -14,17 +14,19 @@ app.get("/categoria", checkToken, (req, res) => {
     limit = Number(limit);
 
     Categoria.find({})
+        .populate('usuario', 'nombre email')
+        .sort('descripcion')
         .skip(from)
         .limit(limit)
         .exec((err, categoriaDB) => {
             if (err) {
                 return res.status(400).json({
                     ok: false,
-                    error: err,
+                    err,
                 });
             }
 
-            Categoria.count({}, (err, count) => {
+            Categoria.countDocuments({}, (err, count) => {
                 if (err) {
                     return res.status(400).json({
                         ok: false,
@@ -133,7 +135,6 @@ app.put("/categoria/:id", [checkToken, checkAdminRole], (req, res) => {
 });
 
 app.delete("/categoria/:id", [checkToken, checkAdminRole], (req, res) => {
-    //req.usuario._id;
     const id = req.params.id;
 
     Categoria.findByIdAndRemove(id, (err, categoriaDB) => {
